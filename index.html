@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to bottom, #87CEFA, #4682B4);
+            color: white;
+            transition: background 0.3s ease;
+        }
+        .container {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 2.5rem;
+        }
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 10px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+            width: 70%;
+            max-width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            background-color: #0056b3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #003d80;
+        }
+        .weather-info {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Checker</h1>
+        <p>Enter a city name or ZIP code to see the weather forecast:</p>
+        <input type="text" id="location" placeholder="City Name or ZIP Code">
+        <br>
+        <button onclick="getWeather()">Get Weather</button>
+        <div id="result" class="weather-info"></div>
+    </div>
+
+    <audio id="ambient-audio" src="ambient.mp3" loop autoplay></audio>
+
+    <script>
+        async function getWeather() {
+            const location = document.getElementById("location").value;
+            try {
+                const geoResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${location}`);
+                const geoData = await geoResponse.json();
+                if (!geoData.results || geoData.results.length === 0) {
+                    throw new Error("Location not found.");
+                }
+                const { latitude, longitude, name, country_code } = geoData.results[0];
+                const weatherResponse = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+                );
+                const weatherData = await weatherResponse.json();
+
+                const isUS = country_code === "US";
+                const temperature = isUS
+                    ? (weatherData.current_weather.temperature * 9/5 + 32).toFixed(1)
+                    : weatherData.current_weather.temperature.toFixed(1);
+                const unit = isUS ? "°F" : "°C";
+
+                displayWeather(name, temperature, unit, weatherData.current_weather.windspeed);
+            } catch (error) {
+                document.getElementById("result").innerHTML = `<p style="color: red;">${error.message}</p>`;
+            }
+        }
+
+        function displayWeather(city, temperature, unit, windspeed) {
+            document.getElementById("result").innerHTML = `
+                <h2>Weather in ${city}</h2>
+                <p>Temperature: ${temperature} ${unit}</p>
+                <p>Windspeed: ${windspeed} km/h</p>
+            `;
+        }
+
+        // Web Audio API for reactive background
+        const audio = document.getElementById('ambient-audio');
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioSource = audioContext.createMediaElementSource(audio);
+        const analyser = audioContext.createAnalyser();
+
+        audioSource.connect(analyser);
+        analyser.connect(audioContext.destination);
+
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        function animateBackground() {
+            analyser.getByteFrequencyData(dataArray);
+
+            // Calculate average frequency
+            const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
+
+            // Map average frequency to color intensity
+            const intensity = Math.min(Math.max(average / 255, 0.3), 0.9); // Limit intensity
+            const color = `rgba(${Math.floor(135 * intensity)}, ${Math.floor(206 * intensity)}, ${Math.floor(250 * intensity)}, 1)`;
+
+            document.body.style.background = `linear-gradient(to bottom, ${color}, #4682B4)`;
+
+            requestAnimationFrame(animateBackground);
+        }
+
+        audio.addEventListener('play', () => {
+            audioContext.resume().then(() => {
+                animateBackground();
+            });
+        });
+    </script>
+</body>
+</html>
