@@ -73,27 +73,21 @@
     <audio id="ambient-audio" src="ambient.mp3" loop autoplay></audio>
 
     <script>
+        const backendURL = "https://your-glitch-project-name.glitch.me"; // Replace with your Glitch backend URL
+
         async function getWeather() {
             const location = document.getElementById("location").value;
             try {
-                const geoResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${location}`);
-                const geoData = await geoResponse.json();
-                if (!geoData.results || geoData.results.length === 0) {
-                    throw new Error("Location not found.");
+                // Call the Glitch backend
+                const response = await fetch(`${backendURL}/weather?location=${encodeURIComponent(location)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
                 }
-                const { latitude, longitude, name, country_code } = geoData.results[0];
-                const weatherResponse = await fetch(
-                    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
-                );
-                const weatherData = await weatherResponse.json();
 
-                const isUS = country_code === "US";
-                const temperature = isUS
-                    ? (weatherData.current_weather.temperature * 9/5 + 32).toFixed(1)
-                    : weatherData.current_weather.temperature.toFixed(1);
-                const unit = isUS ? "°F" : "°C";
-
-                displayWeather(name, temperature, unit, weatherData.current_weather.windspeed);
+                const { location: city, temperature, windspeed } = data;
+                displayWeather(city, temperature, "°C", windspeed);
             } catch (error) {
                 document.getElementById("result").innerHTML = `<p style="color: red;">${error.message}</p>`;
             }
