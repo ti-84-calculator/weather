@@ -63,8 +63,8 @@
 <body>
     <div class="container">
         <h1>Weather Checker</h1>
-        <p>Enter a city name or ZIP code to see the weather forecast:</p>
-        <input type="text" id="location" placeholder="City Name or ZIP Code">
+        <p>Enter a city name to see the weather forecast:</p>
+        <input type="text" id="location" placeholder="City Name">
         <br>
         <button onclick="getWeather()">Get Weather</button>
         <div id="result" class="weather-info"></div>
@@ -73,21 +73,22 @@
     <audio id="ambient-audio" src="ambient.mp3" loop autoplay></audio>
 
     <script>
-        const backendURL = "https://sweet-jet-cost.glitch.me/"; // Replace with your Glitch backend URL
+        const weatherDataURL = "https://your-username.github.io/your-repository/weatherData.json"; // Replace with your GitHub Pages URL
 
         async function getWeather() {
-            const location = document.getElementById("location").value;
+            const location = document.getElementById("location").value.trim().toLowerCase();
             try {
-                // Call the Glitch backend
-                const response = await fetch(`${backendURL}/weather?location=${encodeURIComponent(location)}`);
+                const response = await fetch(weatherDataURL);
                 const data = await response.json();
 
-                if (data.error) {
-                    throw new Error(data.error);
+                // Search for the city in the weather data
+                const cityWeather = data.find(city => city.city.toLowerCase() === location);
+
+                if (!cityWeather) {
+                    throw new Error("City not found in weather data.");
                 }
 
-                const { location: city, temperature, windspeed } = data;
-                displayWeather(city, temperature, "°C", windspeed);
+                displayWeather(cityWeather.city, cityWeather.temperature, "°C", cityWeather.windspeed);
             } catch (error) {
                 document.getElementById("result").innerHTML = `<p style="color: red;">${error.message}</p>`;
             }
