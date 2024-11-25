@@ -72,7 +72,32 @@
 
     <audio id="ambient-audio" src="ambient.mp3" loop autoplay></audio>
 
-    <!-- Link to external JavaScript file -->
+    <!-- Link to external app.js -->
     <script src="app.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const button = document.getElementById("getWeatherButton");
+            button.addEventListener("click", getWeather);
+        });
+
+        async function getWeather() {
+            const location = document.getElementById("location").value.trim().toLowerCase();
+            const cityWeather = weatherData.find(city => city.city.toLowerCase() === location);
+
+            if (!cityWeather) {
+                throw new Error("City not found in weather data.");
+            }
+
+            displayWeather(cityWeather.city, cityWeather.temperature, "°C", cityWeather.windspeed);
+        }
+
+        function displayWeather(city, temperature, unit, windspeed) {
+            document.getElementById("result").innerHTML = `
+                <h2>Weather in ${city}</h2>
+                <p>Temperature: ${temperature} ${unit}</p>
+                <p>Windspeed: ${windspeed} km/h</p>
+            `;
+        }
+    </script>
 </body>
 </html>
