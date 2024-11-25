@@ -72,8 +72,10 @@
 
     <audio id="ambient-audio" src="ambient.mp3" loop autoplay></audio>
 
-    <!-- Link to external app.js -->
+    <!-- First, load app.js which contains the weatherData array -->
     <script src="app.js"></script>
+    
+    <!-- Then load the script for handling button click -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const button = document.getElementById("getWeatherButton");
