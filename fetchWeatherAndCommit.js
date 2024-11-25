@@ -35,18 +35,24 @@ async function fetchWeatherData() {
     }
 }
 
+
 async function commitChanges() {
     await fetchWeatherData();
 
-    console.log("Adding changes to Git...");
-    await git.add(weatherDataPath);
+    console.log("Checking for changes in weatherData.json...");
+    const status = await git.status();
+    console.log("Git status:", status);
 
-    console.log("Committing changes...");
-    await git.commit("Update weather data");
-
-    console.log("Pushing changes to GitHub...");
-    await git.push('origin', 'main');
-    console.log("Changes pushed successfully.");
+    if (status.modified.includes("weatherData.json") || status.not_added.includes("weatherData.json")) {
+        console.log("Changes detected. Adding and committing...");
+        await git.add(weatherDataPath);
+        await git.commit("Update weather data");
+        console.log("Committing successful. Pushing changes...");
+        await git.push("origin", "main");
+        console.log("Changes pushed successfully.");
+    } else {
+        console.log("No changes detected in weatherData.json. Skipping commit and push.");
+    }
 }
 
 commitChanges().catch((error) => {
