@@ -66,75 +66,13 @@
         <p>Enter a city name to see the weather forecast:</p>
         <input type="text" id="location" placeholder="City Name">
         <br>
-        <button onclick="getWeather()">Get Weather</button>
+        <button id="getWeatherButton">Get Weather</button>
         <div id="result" class="weather-info"></div>
     </div>
 
     <audio id="ambient-audio" src="ambient.mp3" loop autoplay></audio>
 
-    <script>
-        const weatherDataURL = "https://ti-84-calculator.github.io/weather/weatherData.json"; // Replace with your GitHub Pages URL
-
-        async function getWeather() {
-            const location = document.getElementById("location").value.trim().toLowerCase();
-            try {
-                const response = await fetch(weatherDataURL);
-                const data = await response.json();
-
-                // Search for the city in the weather data
-                const cityWeather = data.find(city => city.city.toLowerCase() === location);
-
-                if (!cityWeather) {
-                    throw new Error("City not found in weather data.");
-                }
-
-                displayWeather(cityWeather.city, cityWeather.temperature, "°C", cityWeather.windspeed);
-            } catch (error) {
-                document.getElementById("result").innerHTML = `<p style="color: red;">${error.message}</p>`;
-            }
-        }
-
-        function displayWeather(city, temperature, unit, windspeed) {
-            document.getElementById("result").innerHTML = `
-                <h2>Weather in ${city}</h2>
-                <p>Temperature: ${temperature} ${unit}</p>
-                <p>Windspeed: ${windspeed} km/h</p>
-            `;
-        }
-
-        // Web Audio API for reactive background
-        const audio = document.getElementById('ambient-audio');
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const audioSource = audioContext.createMediaElementSource(audio);
-        const analyser = audioContext.createAnalyser();
-
-        audioSource.connect(analyser);
-        analyser.connect(audioContext.destination);
-
-        analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-
-        function animateBackground() {
-            analyser.getByteFrequencyData(dataArray);
-
-            // Calculate average frequency
-            const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
-
-            // Map average frequency to color intensity
-            const intensity = Math.min(Math.max(average / 255, 0.3), 0.9); // Limit intensity
-            const color = `rgba(${Math.floor(135 * intensity)}, ${Math.floor(206 * intensity)}, ${Math.floor(250 * intensity)}, 1)`;
-
-            document.body.style.background = `linear-gradient(to bottom, ${color}, #4682B4)`;
-
-            requestAnimationFrame(animateBackground);
-        }
-
-        audio.addEventListener('play', () => {
-            audioContext.resume().then(() => {
-                animateBackground();
-            });
-        });
-    </script>
+    <!-- Link to external JavaScript file -->
+    <script src="app.js"></script>
 </body>
 </html>
