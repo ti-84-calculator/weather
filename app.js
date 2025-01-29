@@ -255,21 +255,30 @@ document.getElementById("getWeatherButton").addEventListener("click", getWeather
 
 function getWeather() {
     const location = document.getElementById("location").value.trim().toLowerCase();
-    
-    // Ensure weatherData exists (it should be injected by GitHub Action)
+
     if (!Array.isArray(weatherData)) {
         document.getElementById("result").innerHTML = `<p style="color: red;">Weather data is unavailable.</p>`;
         return;
     }
 
-    const cityWeather = weatherData.find(city => city.city.toLowerCase() === location);
+    // Find city in weatherData (ignoring the 🇺🇸 emoji)
+    const cityWeather = weatherData.find(city => city.city.replace("🇺🇸", "").trim().toLowerCase() === location);
 
     if (!cityWeather) {
         document.getElementById("result").innerHTML = `<p style="color: red;">City not found in weather data. Message the owner to suggest your city!</p>`;
         return;
     }
 
-    displayWeather(cityWeather.city, cityWeather.temperature, "°C", cityWeather.windspeed);
+    // Detect if it's a U.S. city by checking for 🇺🇸
+    const isUSCity = cityWeather.city.includes("🇺🇸");
+    const temperature = isUSCity 
+        ? ((cityWeather.temperature * 9/5) + 32).toFixed(1) // Convert to Fahrenheit
+        : cityWeather.temperature; // Keep Celsius
+
+    const unit = isUSCity ? "°F" : "°C";
+    const cleanCityName = cityWeather.city.replace("🇺🇸", "").trim(); // Remove 🇺🇸 for display
+
+    displayWeather(cleanCityName, temperature, unit, cityWeather.windspeed);
 }
 
 function displayWeather(city, temperature, unit, windspeed) {
