@@ -1,29 +1,22 @@
+document.getElementById("getWeatherButton").addEventListener("click", getWeather);
 
-// Replace this URL with the actual GitHub Pages URL where your weatherData.json is hosted
-const weatherDataURL = "https://ti-84-calculator.github.io/weather/weatherData.json"; 
-
-document.addEventListener("DOMContentLoaded", function() {
-    const button = document.getElementById("getWeatherButton");
-    button.addEventListener("click", getWeather);
-});
-
-async function getWeather() {
+function getWeather() {
     const location = document.getElementById("location").value.trim().toLowerCase();
-    try {
-        const response = await fetch(weatherDataURL);
-        const data = await response.json();
-
-        // Search for the city in the weather data
-        const cityWeather = data.find(city => city.city.toLowerCase() === location);
-
-        if (!cityWeather) {
-            throw new Error("City not found in weather data. Message the owner to suggest your city!");
-        }
-
-        displayWeather(cityWeather.city, cityWeather.temperature, "°C", cityWeather.windspeed);
-    } catch (error) {
-        document.getElementById("result").innerHTML = `<p style="color: red;">${error.message}</p>`;
+    
+    // Ensure weatherData exists (it should be injected by GitHub Action)
+    if (!Array.isArray(weatherData)) {
+        document.getElementById("result").innerHTML = `<p style="color: red;">Weather data is unavailable.</p>`;
+        return;
     }
+
+    const cityWeather = weatherData.find(city => city.city.toLowerCase() === location);
+
+    if (!cityWeather) {
+        document.getElementById("result").innerHTML = `<p style="color: red;">City not found in weather data. Message the owner to suggest your city!</p>`;
+        return;
+    }
+
+    displayWeather(cityWeather.city, cityWeather.temperature, "°C", cityWeather.windspeed);
 }
 
 function displayWeather(city, temperature, unit, windspeed) {
